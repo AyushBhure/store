@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # store
  web application that allows users to submit ratings for stores registered on the  platform. The ratings should range from 1 to 5.
 =======
@@ -149,4 +148,3 @@ The application will be available at:
 - Role-based access control & validations
 - Interactive frontend with state management
 - Sorting, filtering, and CRUD operations
->>>>>>> 2ff04c76 (Initial commit)
