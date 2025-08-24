@@ -94,7 +94,6 @@ const Login = () => {
           >
             {loading ? (
               <>
-                <span>Loading...</span>
                 Signing in...
               </>
             ) : (

@@ -44,11 +44,10 @@ const App = () => {
       <Navbar />
       <div className="container">
         <Routes>
-          {/* Public routes */}
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected routes */}
           <Route
             path="/dashboard"
             element={
@@ -105,7 +104,7 @@ const App = () => {
         reverseOrder={false}
         gutter={8}
         toastOptions={{
-          duration: 5000,
+          duration: 2000,
           className: '',
           style: {
             background: '#fff',
