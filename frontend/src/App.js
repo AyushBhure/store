@@ -12,6 +12,7 @@ import UserManagement from './components/admin/UserManagement';
 import StoreManagement from './components/admin/StoreManagement';
 import RatingManagement from './components/admin/RatingManagement';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import { Toaster } from 'react-hot-toast';
 
 const PrivateRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -99,6 +100,20 @@ const App = () => {
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </div>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 5000,
+          className: '',
+          style: {
+            background: '#fff',
+            color: '#363636',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+          }
+        }}
+      />
     </div>
   );
 };

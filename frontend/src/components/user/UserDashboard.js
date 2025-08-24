@@ -197,18 +197,6 @@ const UserDashboard = () => {
                   required
                 />
               </div>
-              <div className="form-group" style={{ marginTop: '10px' }}>
-                <label>Confirm Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-                  }
-                  required
-                />
-              </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowPasswordModal(false)}>

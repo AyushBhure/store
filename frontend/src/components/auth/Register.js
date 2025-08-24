@@ -6,8 +6,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    address: '', // Added address field
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -28,18 +28,18 @@ const Register = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Address validation
+    if (formData.address.trim().length < 10) {
+      newErrors.address = 'Address must be at least 10 characters';
+    }
+
     // Password validation (8-16 chars, 1 uppercase, 1 special char)
     if (formData.password.length < 8 || formData.password.length > 16) {
       newErrors.password = 'Password must be between 8 and 16 characters';
     } else if (!/(?=.*[A-Z])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
+      newErrors.password = 'Must contain at least one uppercase letter';
     } else if (!/(?=.*[!@#$%^&*])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one special character (!@#$%^&*)';
-    }
-
-    // Confirm password validation
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.password = 'Must contain at least one special character';
     }
 
     setErrors(newErrors);
@@ -64,15 +64,14 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
-
+    
     const userData = {
       name: formData.name,
       email: formData.email,
+      address: formData.address, // Include address
       password: formData.password
     };
 
@@ -122,6 +121,21 @@ const Register = () => {
           </div>
 
           <div className="form-group">
+            <label htmlFor="address" className="form-label">Address</label>
+            <textarea
+              id="address"
+              name="address"
+              className="form-control"
+              value={formData.address}
+              onChange={handleChange}
+              required
+              placeholder="Enter your full address (at least 10 characters)"
+              rows="3"
+            />
+            {errors.address && <div className="alert alert-danger">{errors.address}</div>}
+          </div>
+
+          <div className="form-group">
             <label htmlFor="password" className="form-label">Password</label>
             <input
               type="password"
@@ -131,25 +145,12 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="8-16 characters, 1 uppercase, 1 special character"
+              placeholder="8-16 characters with 1 uppercase and 1 special character"
             />
             {errors.password && <div className="alert alert-danger">{errors.password}</div>}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              className="form-control"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              placeholder="Confirm your password"
-            />
-            {errors.confirmPassword && <div className="alert alert-danger">{errors.confirmPassword}</div>}
-          </div>
+          {/* Removed confirm password field */}
 
           <button
             type="submit"

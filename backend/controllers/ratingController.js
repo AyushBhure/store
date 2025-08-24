@@ -1,5 +1,6 @@
 const pool = require('../database/connection');
 
+// In getAllRatings function
 const getAllRatings = async (req, res) => {
   try {
     const { sortBy = 'created_at', sortOrder = 'DESC', store_id, user_id } = req.query;
@@ -7,7 +8,7 @@ const getAllRatings = async (req, res) => {
     let query = `
       SELECT r.id, r.rating, r.created_at, r.updated_at,
              u.name as user_name, u.email as user_email,
-             s.name as store_name, s.address as store_address
+             s.id as store_id, s.name as store_name, s.address as store_address
       FROM ratings r
       JOIN users u ON r.user_id = u.id
       JOIN stores s ON r.store_id = s.id
@@ -148,32 +149,37 @@ const createRating = async (req, res) => {
 const updateRating = async (req, res) => {
   try {
     const { id } = req.params;
-    const { rating } = req.body;
+    const { rating, store_id } = req.body;
+
+    // Validate rating value
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Invalid rating value' });
+    }
 
     // Check if rating exists and user has permission to update it
     const existingRating = await pool.query(`
       SELECT r.id, r.user_id, r.store_id, s.owner_id
       FROM ratings r
       JOIN stores s ON r.store_id = s.id
-      WHERE r.id = $1
-    `, [id]);
+      WHERE r.id = $1 AND r.store_id = $2
+    `, [id, store_id]);
 
     if (existingRating.rows.length === 0) {
       return res.status(404).json({ error: 'Rating not found' });
     }
 
-    // Check permissions (user can update their own rating, admin can update any)
-    if (req.user.role !== 'admin' && existingRating.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+    // Check permissions
+    if (existingRating.rows[0].user_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only update your own ratings' });
     }
 
     // Update rating
     const result = await pool.query(`
       UPDATE ratings 
       SET rating = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2 
+      WHERE id = $2 AND user_id = $3
       RETURNING id, rating, updated_at
-    `, [rating, id]);
+    `, [rating, id, req.user.id]);
 
     res.json({
       message: 'Rating updated successfully',

@@ -11,10 +11,26 @@ const StoreList = () => {
   const [sortOrder, setSortOrder] = useState('ASC');
   const [selectedStore, setSelectedStore] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [userRatings, setUserRatings] = useState({});
 
   useEffect(() => {
     fetchStores();
+    fetchUserRatings();
   }, [searchTerm, sortBy, sortOrder]);
+
+  const fetchUserRatings = async () => {
+    try {
+      const response = await axios.get('/api/ratings');
+      const ratingsMap = {};
+      response.data.ratings.forEach(rating => {
+        ratingsMap[rating.store_id] = rating;
+      });
+      setUserRatings(ratingsMap);
+    } catch (error) {
+      console.error('Error fetching user ratings:', error);
+      toast.error('Failed to load your ratings'); // Added toast
+    }
+  };
 
   const fetchStores = async () => {
     try {
@@ -58,24 +74,43 @@ const StoreList = () => {
 
 
   const handleRateStore = (store) => {
-    setSelectedStore(store);
+    setSelectedStore({
+      ...store,
+      userRating: userRatings[store.id]
+    });
     setShowRatingModal(true);
   };
 
   const handleRatingSubmit = async (ratingData) => {
     try {
-      await axios.post('/api/ratings', {
-        store_id: selectedStore.id,
-        ...ratingData
-      });
-
-      toast.success('Rating submitted successfully!');
+      if (userRatings[selectedStore.id]) {
+        // Update existing rating
+        await axios.put(`/api/ratings/${userRatings[selectedStore.id].id}`, {
+          rating: ratingData.rating,
+          store_id: selectedStore.id  // Add store_id for validation
+        });
+        toast.success('Rating updated successfully!');
+      } else {
+        // Create new rating
+        await axios.post('/api/ratings', {
+          store_id: selectedStore.id,
+          rating: ratingData.rating
+        });
+        toast.success('Rating submitted successfully!');
+      }
+      
       setShowRatingModal(false);
       setSelectedStore(null);
-      fetchStores();
+      // Refresh both stores and ratings data
+      await Promise.all([fetchStores(), fetchUserRatings()]);
     } catch (error) {
       const message = error.response?.data?.error || 'Failed to submit rating';
       toast.error(message);
+      // Keep modal open on validation errors
+      if (error.response?.status !== 400) {
+        setShowRatingModal(false);
+        setSelectedStore(null);
+      }
     }
   };
 
@@ -157,10 +192,12 @@ const StoreList = () => {
             <table className="table">
               <thead>
                 <tr>
+                  {/* <th>Store ID</th>  */}
                   <th>Store Name</th>
                   <th>Address</th>
                   <th>Owner</th>
                   <th>Average Rating</th>
+                  <th>Your Rating</th>
                   <th>Total Ratings</th>
                   <th>Actions</th>
                 </tr>
@@ -168,6 +205,7 @@ const StoreList = () => {
               <tbody>
                 {stores.map((store) => (
                   <tr key={store.id}>
+                    {/* <td>{store.id}</td> New data cell */}
                     <td>
                       <strong style={{ color: '#333' }}>{store.name}</strong>
                     </td>
@@ -193,6 +231,20 @@ const StoreList = () => {
                       </div>
                     </td>
                     <td>
+                      {userRatings[store.id] ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {renderStars(userRatings[store.id].rating)}
+                          <span  style={{
+                          marginLeft: '8px',
+                          fontWeight: '600',
+                          color: '#111827'
+                        }}>{userRatings[store.id].rating}/5</span>
+                        </div>
+                      ) : (
+                        'Not rated'
+                      )}
+                    </td>
+                    <td >
                       <span style={{
                         fontWeight: '600',
                         color: '#6c757d'
@@ -208,24 +260,12 @@ const StoreList = () => {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '4px',
+                            backgroundColor: userRatings[store.id] ? '#15c200' : '#007bff'
                           }}
                         >
-                          Rate Store
+                          {userRatings[store.id] ? 'Update Rate' : 'Rate Store'}
                         </button>
-                        {/* <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => {
-                            toast.success(`Viewing details for ${store.name}`);
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          Update Rating
-                        </button> */}
                       </div>
                     </td>
                   </tr>

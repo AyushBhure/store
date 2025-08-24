@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const RatingModal = ({ store, onClose, onSubmit }) => {
-  const [rating, setRating] = useState(5);
+  // Initialize with existing rating or default to 5
+  const [rating, setRating] = useState(store.userRating?.rating || 5);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!rating) {
+      toast.error('Please select a rating');
+      return;
+    }
     setLoading(true);
-
-    await onSubmit({
-      rating
-    });
-
-    setLoading(false);
+    
+    try {
+      await onSubmit({
+        rating: Number(rating)
+      });
+    } catch (error) {
+      toast.error('Failed to save rating'); // Additional feedback
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStars = (rating) => {
@@ -65,7 +75,7 @@ const RatingModal = ({ store, onClose, onSubmit }) => {
             fontSize: '1.5rem',
             fontWeight: '700'
           }}>
-            Rate {store.name}
+            {store.userRating ? `Update Rating for ${store.name}` : `Rate ${store.name}`}
           </h3>
           <button
             onClick={onClose}
@@ -138,26 +148,11 @@ const RatingModal = ({ store, onClose, onSubmit }) => {
             >
               Cancel
             </button>
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               className="btn btn-primary"
-              disabled={loading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
             >
-              {loading ? (
-                <>
-                  <span>Loading...</span>
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  Submit Rating
-                </>
-              )}
+              {store.userRating ? 'Update Rating' : 'Submit Rating'}
             </button>
           </div>
         </form>
